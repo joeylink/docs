@@ -393,6 +393,8 @@ local out = Tsdb.listTags({limit = 10, next = &quot;city_taipei_1_1_true&quot;})
 -- or relative (relative_start, relative_unit) time parameters, which cannot be used at the same time.
 -- The first element in returned data point array is always the timestamp.
 -- You can use fill arguement to indicate the imputation of missing values
+-- The metric names of columns property in the response will always be sorted in alphabetical order,
+-- except for the timestamp column which is always the first one.
 
 -- Query by Absolute Time Constraint --
 -- Get temperature and humidity data points between 2016-08-01 (inclusive) and 2016-09-01 (exclusive) from devices in Minneapolis city and US region
