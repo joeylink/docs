@@ -4,18 +4,18 @@ title: HTTP
 
 # HTTP Device API Overview
 
-This is the HTTP Device API for the Murano Platform.  Device firmware and applications should use this API to provision and interact with the platform.  Devices use dataport resources to read from and write to, like a variable.  
+This is the HTTP Device API for the Murano Platform.  Device firmware and applications should use this API to provision and interact with the platform.  Devices use resources to read from and write to, like a variable.  
 
 
 # Procedures
 ### Timeseries Data Procedures
-* [Write](#write) - write new data to a set of dataports
-* [Read](#read) - read the latest data from a set of dataports
-* [Hybrid Write/Read](#hybrid-writeread) - write a set of dataports, then read a set of dataports
-* [Long-Polling](#long-polling) - be notified immediately when a dataport is updated
+* [Write](#write) - write new data to a set of resources
+* [Read](#read) - read the latest data from a set of resources
+* [Hybrid Write/Read](#hybrid-writeread) - write a set of resources, then read a set of resources
+* [Long-Polling](#long-polling) - be notified immediately when a resource is updated
 
 ### Product Device Provisioning Procedures
-* [Activate](#activate) - activate device and get device's CIK
+* [Activate](#activate) - activate device and get device's Token
 * [List Available Content](#list-available-content) - get a list of content available to device
 * [Get Content Info](#get-content-info) - get meta information about content file
 * [Download Content](#download-content) - get content file
@@ -58,7 +58,7 @@ Typical HTTP response codes include:
 | 200    | OK            | Successful request, returning requested values       |
 | 204    | No Content    | Successful request, nothing will be returned         |
 | 4xx    | Client Error  | There was an error\* with the request by the client  |
-| 401    | Unauthorized  | No or invalid CIK                                    |
+| 401    | Unauthorized  | No or invalid Token                                    |
 | 5xx    | Server Error  | There was an error with the request on the server    |
 
 _\* Note: aliases that are not found are not considered errors in the request. See the documentation for [read](#read), [write](#write), and [Hybrid write/read](#hybrid-writeread) for details._
@@ -68,7 +68,7 @@ _\* Note: aliases that are not found are not considered errors in the request. S
 
 ## Write
 
-Write one or more dataports of `<alias>` with given `<value>`. The client (e.g., device or portal) is identified by `<CIK>`. Data is written with the server timestamp as of the time the data was received by the server. Data cannot be written faster than a rate of once per second; doing so results in undefined behavior. If multiple aliases are specified, they are written at the same timestamp.
+Write one or more resources of `<alias>` with given `<value>`. The client (e.g., device or portal) is identified by `<Token>`. Data is written with the server timestamp as of the time the data was received by the server. Data cannot be written faster than a rate of once per second; doing so results in undefined behavior. If multiple aliases are specified, they are written at the same timestamp.
 
 
 ### request
@@ -76,7 +76,7 @@ Write one or more dataports of `<alias>` with given `<value>`. The client (e.g.,
 ```
 POST /onep:v1/stack/alias HTTP/1.1 
 Host: m2.exosite.com 
-X-Exosite-CIK: <CIK> 
+X-Exosite-Token: <Token> 
 Content-Type: application/x-www-form-urlencoded; charset=utf-8 
 Content-Length: <length> 
 <blank line>
@@ -102,7 +102,7 @@ Content-Length: 0 
 
 ```
 $ curl http://m2.exosite.com/onep:v1/stack/alias \
-    -H 'X-Exosite-CIK: <CIK>' \
+    -H 'X-Exosite-Token: <Token>' \
     -H 'Accept: application/x-www-form-urlencoded; charset=utf-8' \
     -d '<alias>=<value>'
 ```
@@ -110,7 +110,7 @@ $ curl http://m2.exosite.com/onep:v1/stack/alias \
 
 ## Read
 
-Read the most recent value from one or more dataports with `<alias>`. The client (e.g., device or portal) to read from is identified by `<CIK>`. If at least one `<alias>` is found and has data, data will be returned.
+Read the most recent value from one or more resources with `<alias>`. The client (e.g., device or portal) to read from is identified by `<Token>`. If at least one `<alias>` is found and has data, data will be returned.
 
 
 ### request
@@ -118,7 +118,7 @@ Read the most recent value from one or more dataports with `<alias>`. The client
 ```
 GET /onep:v1/stack/alias?<alias 1>&<alias 2...>&<alias n> HTTP/1.1
 Host: m2.exosite.com
-X-Exosite-CIK: <CIK>
+X-Exosite-Token: <Token>
 Accept: application/x-www-form-urlencoded; charset=utf-8
 <blank line>
 ```
@@ -143,15 +143,15 @@ Content-Length: <length>
 ### example
 
 ```
-$ curl http://m2.exosite.com/onep:v1/stack/alias?<dataport-alias> \
-    -H 'X-Exosite-CIK: <CIK>' \
+$ curl http://m2.exosite.com/onep:v1/stack/alias?<resource-alias> \
+    -H 'X-Exosite-Token: <Token>' \
     -H 'Accept: application/x-www-form-urlencoded; charset=utf-8'
 ```
 
 
 ## Hybrid write/read
 
-Write one or more dataports of `<alias w>` with given `<value>` and then read the most recent value from one or more dataports with `<alias r>`. The client (e.g., device, portal) to write to and read from is identified by `<CIK>`. All writes occur before all reads.
+Write one or more resources of `<alias w>` with given `<value>` and then read the most recent value from one or more resources with `<alias r>`. The client (e.g., device, portal) to write to and read from is identified by `<Token>`. All writes occur before all reads.
 
 
 ### request
@@ -159,7 +159,7 @@ Write one or more dataports of `<alias w>` with given `<value>` and then read th
 ```
 POST /onep:v1/stack/alias?<alias r1>&<alias r2...>&<alias rn> HTTP/1.1
 Host: m2.exosite.com
-X-Exosite-CIK: <CIK>
+X-Exosite-Token: <Token>
 Accept: application/x-www-form-urlencoded; charset=utf-8
 Content-Type: application/x-www-form-urlencoded; charset=utf-8
 Content-Length: <length>
@@ -188,7 +188,7 @@ Content-Length: <length>
 
 ```
 $ curl http://m2.exosite.com/onep:v1/stack/alias?<alias_to_read> \
-    -H 'X-Exosite-CIK: <CIK>' \
+    -H 'X-Exosite-Token: <Token>' \
     -H 'Accept: application/x-www-form-urlencoded; charset=utf-8' \
     -d '<alias_to_write>=<value>'
 ```
@@ -198,11 +198,11 @@ $ curl http://m2.exosite.com/onep:v1/stack/alias?<alias_to_read> \
 
 The [read](#read) procedure now supports long polling. Long polling is a method of getting a server push without the complexities of setting up publicly accessible HTTP server endpoints on your device. As the name suggests, long polling is similar to normal polling of an HTTP resource, but instead of requiring the client to make a new request to the server constantly, the server will wait to return until it has new information to return to the client (or a timeout has been reached).
 
-To perform a request with long polling, simply add the header `Request-Timeout: <miliseconds>` to your request. The server will then wait until a new datapoint is written to the given dataport and will then immediately return the value. If no datapoint is written before that time, a `304 Not Modified` is returned and the client may make another long polling request to continue monitoring that dataport.
+To perform a request with long polling, simply add the header `Request-Timeout: <miliseconds>` to your request. The server will then wait until a new datapoint is written to the given resource and will then immediately return the value. If no datapoint is written before that time, a `304 Not Modified` is returned and the client may make another long polling request to continue monitoring that resource.
 
-You may also optionally add an `If-Modified-Since` header to specify a start time to wait. This is exactly the same as the `alias.last` semantics in scripting. You will want to use this if it's important that you receive all updates to a given dataport; otherwise it is possible to miss points that get written between long polling requests.
+You may also optionally add an `If-Modified-Since` header to specify a start time to wait. This is exactly the same as the `alias.last` semantics in scripting. You will want to use this if it's important that you receive all updates to a given resource; otherwise it is possible to miss points that get written between long polling requests.
 
-Note: only one dataport may be read at a time when using long polling.
+Note: only one resource may be read at a time when using long polling.
 
 
 ### request
@@ -210,7 +210,7 @@ Note: only one dataport may be read at a time when using long polling.
 ```
 GET /onep:v1/stack/alias?<alias 1> HTTP/1.1
 Host: m2.exosite.com
-X-Exosite-CIK: <CIK>
+X-Exosite-Token: <Token>
 Accept: application/x-www-form-urlencoded; charset=utf-8
 Request-Timeout: <timeout>
 If-Modified-Since: <timestamp>
@@ -224,7 +224,7 @@ If-Modified-Since: <timestamp>
 
 ### response
 
-When the dataport is updated:
+When the resource is updated:
 
 ```
 HTTP/1.1 200 OK
@@ -237,7 +237,7 @@ Last-Modified: <datapoint-modification-date>
 <alias>=<value>
 ```
 
-If the dataport is not updated before timeout:
+If the resource is not updated before timeout:
 
 ```
 HTTP/1.1 304 Not Modified
@@ -248,14 +248,14 @@ Content-Length: <length>
 <blank line>
 ```
 
-When the dataport is updated and a value is returned, a `Last-Modified` header is included. When it is vital for your application to receive all updates to a dataport, you can pass the `Last-Modified` header value back to the `If-Not-Modified-Since` header in your next request to make sure you don't miss any points that may have been written since the last request returned.
+When the resource is updated and a value is returned, a `Last-Modified` header is included. When it is vital for your application to receive all updates to a resource, you can pass the `Last-Modified` header value back to the `If-Not-Modified-Since` header in your next request to make sure you don't miss any points that may have been written since the last request returned.
 
 
 ### example
 
 ```
-$ curl http://m2.exosite.com/onep:v1/stack/alias?<dataport-alias> \
-    -H 'X-Exosite-CIK: <CIK>' \
+$ curl http://m2.exosite.com/onep:v1/stack/alias?<resource-alias> \
+    -H 'X-Exosite-Token: <Token>' \
     -H 'Accept: application/x-www-form-urlencoded; charset=utf-8'
     -H 'Request-Timeout: 30000
     -H 'If-Modified-Since: 1408088308
@@ -295,13 +295,13 @@ Content-Type: text/plain; charset=utf-8
 Response may also be:
 
 * `HTTP/1.1 404 Not Found` if the client described by `<vendor>`, `<model>`, `<sn>` is not found on the system.
-* `HTTP/1.1 409 Conflict` if the serial number is not enabled for activation.
+* `HTTP/1.1 409 Conflict` if the identity is not enabled for activation.
 * See [HTTP Responses](#http-responses) for a full list of responses
 
 
 ### example
 
-This command activates a device with serial number 12345678 and returns its CIK.
+This command activates a device with identity 12345678 and returns its Token.
 
 ```
 $ curl http://m2.exosite.com/provision/activate \
@@ -312,13 +312,13 @@ $ curl http://m2.exosite.com/provision/activate \
 
 ## List Available Content
 
-List content `<id>`s. Caller with `<DeviceCIK>` must have an activated
-serial number in given `<vendor>` `<model>` name space.
+List content `<id>`s. Caller with `<DeviceToken>` must have an activated
+identity in given `<vendor>` `<model>` name space.
 
 ```
 GET /provision/download?vendor=<vendor>&model=<model> HTTP/1.1
 Host: m2.exosite.com
-X-Exosite-CIK: <CIK>
+X-Exosite-Token: <Token>
 Content-Length: <length>
 <blank line>
 ```
@@ -346,7 +346,7 @@ Response may also be:
 
 ## Download Content
 
-If caller with `<CIK>` has an activated SN in given `<vendor>` `<model>` name
+If caller with `<Token>` has an activated SN in given `<vendor>` `<model>` name
 space, and is authorized for the content, then the `<id>` content blob, or its
 requested range, is returned. The header `Range: bytes=<range-specifier>`, if
 specified, allows the caller to request a chunk of bytes at a time.
@@ -361,7 +361,7 @@ of `<blob>` is based on the type set in the `POST` to
 ```
 GET /provision/download?vendor=<vendor>&model=<model>&id=<id> HTTP/1.1
 Host: m2.exosite.com
-X-Exosite-CIK: <CIK>
+X-Exosite-Token: <Token>
 {Range: bytes=<range-specifier>}
 <blank line>
 ```
@@ -391,14 +391,14 @@ Response may also be:
 
 ## Get Content Info
 
-If caller with `<CIK>` has an activated SN in given `<vendor>` `<model>` name
+If caller with `<Token>` has an activated SN in given `<vendor>` `<model>` name
 space, and is authorized for the content, then the `<id>` content information
 is returned.
 
 ```
 GET /provision/download?vendor=<vendor>&model=<model>&id=<id>&info=true HTTP/1.1
 Host: m2.exosite.com
-X-Exosite-CIK: <CIK>
+X-Exosite-Token: <Token>
 Content-Length: <length>
 <blank line>
 ```
